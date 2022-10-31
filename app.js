@@ -18,46 +18,89 @@ const articleSchema = new mongoose.Schema({
 
 const Article = new mongoose.model("article", articleSchema);
 
-//  GET requests
-app.get("/articles", (req, res) => {
-  Article.find({}, (err, articles) => {
-    if (!err) {
-      res.send(articles);
-    } else {
-      res.send(err);
-    }
-  });
-});
-app.get("/articles/:articleID", (req, res) => {
-  Article.findById(String(req.params.articleID), (err, docs) => {
-    if (!err) {
-      res.send(docs);
-    } else {
-      res.send(err);
-    }
-  });
-});
+app
+  .route("/articles")
+  .get((req, res) => {
+    Article.find({}, (err, articles) => {
+      if (!err) {
+        res.send(articles);
+      } else {
+        res.send(err);
+      }
+    });
+  })
+  .post((req, res) => {
+    const title = req.body.title;
+    const content = req.body.content;
+    const article = new Article({
+      title,
+      content,
+    });
 
-//  Post requests
-app.post("/articles", (req, res) => {
-  const title = req.body.title;
-  const content = req.body.content;
-  const article = new Article({
-    title,
-    content,
+    Article.create(article, (err, doc) => {
+      if (!err) {
+        res.send(doc);
+      } else {
+        res.send(err);
+      }
+    });
+  })
+  .delete((req, res) => {
+    Article.deleteMany((err) => {
+      if (!err) {
+        res.send("Successfully deleted all articles!");
+      } else {
+        res.send(err);
+      }
+    });
   });
-  console.log("article", req.body);
 
-  Article.create(article, (err, doc) => {
-    if (!err) {
-      res.send(doc);
-    } else {
-      res.send(err);
-    }
+app
+  .route("/articles/:articleID")
+  .get((req, res) => {
+    Article.findById(req.params.articleID, (err, docs) => {
+      if (!err) {
+        res.send(docs);
+      } else {
+        res.send(err);
+      }
+    });
+  })
+  .post((req, res) => {
+    Article.findByIdAndDelete(req.params.articleID, (err, db) => {
+      if (!err) {
+        res.send(db);
+      } else {
+        res.send(err);
+      }
+    });
+  })
+  .put((req, res) => {
+    const title = req.body.title;
+    const content = req.body.content;
+    const article = {
+      title,
+      content,
+    };
+    const articleId = req.params.articleID;
+    Article.findByIdAndUpdate(articleId, article, (err, db) => {
+      if (!err) {
+        res.send(db);
+      } else {
+        res.send(err);
+      }
+    });
+  })
+  .patch((req, res) => {
+    const articleId = req.params.articleID;
+    Article.findByIdAndUpdate(articleId, req.body, (err, db) => {
+      if (!err) {
+        res.send(db);
+      } else {
+        res.send(err);
+      }
+    });
   });
-});
-
-// DELETE requests
 
 app.listen(3000, function () {
   console.log("Server started on port 3000");
